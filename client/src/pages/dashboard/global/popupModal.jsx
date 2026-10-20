@@ -21,7 +21,7 @@ const style = {
   p: 4,
 };
 
-export default function TransitionsModal({isOpen, onClose, pWidth, popupData}) {
+export default function TransitionsModal({isOpen, onClose, pWidth, popupData, isChat }) {
     if(!isOpen) return null;
   return (
     <div>
@@ -39,7 +39,7 @@ export default function TransitionsModal({isOpen, onClose, pWidth, popupData}) {
         <Fade in={isOpen}>
           <Box sx={{...style, width: pWidth  ? pWidth + "px" : "730px"}} >
             <CircleX onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 duration-200 cursor-pointer" size={24}/>
-            <div className="mt-5 flex gap-2" >
+            <div className={`mt-5 flex ${isChat ? "flex-col" : ""} gap-2`}>
                 {popupData}
             </div>
           </Box>

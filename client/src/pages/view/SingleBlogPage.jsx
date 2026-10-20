@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { Header } from "./layout/Header";
 import { Footer } from "./layout/Footer";
 import Error404 from "./404";
+import CommentSection from '../components/commentSection'; 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
-import {ArrowLeft, ArrowRight} from 'lucide-react';
+import {ArrowLeft, ArrowRight, ThumbsUp, ThumbsDown, UserPlus } from 'lucide-react';
+import { jwtDecode } from "jwt-decode";
 import { RiFacebookLine } from "react-icons/ri";
 import { VscTwitter } from "react-icons/vsc";
 import { PiPinterestLogo } from "react-icons/pi";
@@ -17,15 +19,43 @@ dayjs.extend(timezone);
 
 export default function SingleBlogPage(){
     const [loader, setLoader] = useState(false);
+    const [userId, setUserId] = useState('');
+    const [isLiked, setIsLiked] = useState(false);
+    const [isDisLiked, setIsDisLiked] = useState(0);
+    const [comment, setComment] = useState("");
+    const [isFollowed, setIsFollowed] = useState(false);
+    const [reply, setReply] = useState("");
+    const [isRefresh, setIsRefresh] = useState(false);
     const { slug } = useParams();
-    const [blog, setBlog] = useState([]);
+    const navigate = useNavigate();
+    const [blog, setBlog] = useState([]);   
     useEffect(() => {
+        const token = document.cookie
+            .split('; ')
+            .find(row => row.startsWith(`token=`))
+            ?.split('=')[1];
+        let CurrentUserId = null;
+        if (token) {
+            const decodedToken = jwtDecode(token);
+            CurrentUserId = decodedToken.id;
+            setUserId(decodedToken.id);
+        }
         setLoader(true);
         const getSinglePost = async () => {
             try {
-                const response = await fetch(`${process.env.REACT_APP_HOST_URL}/post/${slug}`);
+                const response = await fetch(`${process.env.REACT_APP_HOST_URL}/post/${slug}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    userId: CurrentUserId 
+                }),
+                });
+
                 const data = await response.json();
                 setBlog(data.data);
+                setIsRefresh(false);
             } catch(error) {
                 console.log(error);
             } finally {
@@ -33,65 +63,173 @@ export default function SingleBlogPage(){
             }
         };
         getSinglePost();
-    }, [slug]);
+    }, [slug, isRefresh]);
 
-    // console.log(blog.categories[0].cat_name);
-    // const [blog,` setBlog] = useState([
-    //     {
-    //     "id": 1,
-    //     "title": "The Future of Remote Work in 2026",
-    //     "slug": "future-of-remote-work-2026",
-    //     "published_date": "2026-07-15T09:00:00Z",
-    //     "updated_date": "2026-07-22T14:15:00Z",
-    //     "status": "published",
-    //     "reading_time_minutes": 5,
-    //     "author": {
-    //         "id": 101,
-    //         "name": "Jane Doe",
-    //         "avatar": "https://picsum.photos",
-    //         "bio": "Tech journalist and workspace designer focusing on the evolution of digital collaboration."
-    //     },
-    //     "category": {
-    //         "id": 1,
-    //         "name": "Technology",
-    //         "slug": "technology"
-    //     },
-    //     "tags": [
-    //         { "id": 10, "name": "Remote Work", "slug": "remote-work" },
-    //         { "id": 11, "name": "AI", "slug": "ai" },
-    //         { "id": 12, "name": "Productivity", "slug": "productivity" }
-    //     ],
-    //     "images": {
-    //         "featured": "https://picsum.photos",
-    //         "thumbnail": "https://picsum.photos",
-    //         "alt_text": "A modern minimalist home office setup with advanced digital displays."
-    //     },
-    //     "seo": {
-    //         "meta_title": "The Future of Remote Work in 2026 | TechTrends",
-    //         "meta_description": "An in-depth look at how artificial intelligence and virtual reality are reshaping the modern hybrid workspace.",
-    //         "og_type": "article"
-    //     },
-    //     "summary": "An in-depth look at how artificial intelligence and virtual reality are reshaping the modern hybrid workspace.",
-    //     "content": "<h2>The Next Evolution of Work</h2><p>Remote work is no longer just about Zoom calls and Slack channels. As we cross into 2026, artificial intelligence agents and spatial computing environments are fundamentally redefining what it means to collaborate asynchronously.</p><h2>Spatial Workspaces Rise</h2><p>Virtual reality headsets have grown lightweight enough for daily 4-hour shifts. Teams now meet in persistent digital twins of physical offices, reducing screen fatigue dramatically.</p><h2>AI-Driven Asynchronous Alignment</h2><p>The biggest shift comes from autonomous meeting summarizers. Missing a morning sync no longer penalizes a worker, as localized AI agents deliver bespoke, hyper-relevant action points based on individual project roles.</p>",
-    //     "comments": [
-    //         {
-    //         "id": 501,
-    //         "user": "Alice Vance",
-    //         "avatar": "https://picsum.photos",
-    //         "comment_date": "2026-07-16T10:20:00Z",
-    //         "text": "The bit about spatial computing reducing screen fatigue is spot on. Our team tried it last week!"
-    //         }
-    //     ],
-    //     "related_posts": [
-    //         {
-    //         "id": 3,
-    //         "title": "Mastering CSS Grid in 10 Minutes",
-    //         "slug": "mastering-css-grid",
-    //         "featured_image": "https://picsum.photos"
-    //         }
-    //     ]
-    //     }
-    // ]);
+     const onlikeBlog = async (blogId, commentId, like_type, like_status) => {
+        if(!userId){
+            navigate('/login');
+        }
+        if(isDisLiked){
+            setIsDisLiked(false);
+        }
+        try {
+            const response = await fetch(`${process.env.REACT_APP_HOST_URL}/likes`,{
+                method:"POST",
+                headers: {
+                    'Content-Type': 'application/json' // 👈 Crucial header
+                },
+                body:JSON.stringify({
+                    user_id: userId,
+                    post_id: blogId ?? null,
+                    comment_id: commentId ?? null,
+                    like_status: like_status,
+                    like_type: like_type
+                })
+            });
+            const data = await response.json();
+                if (data.success) {
+                    setIsRefresh(true);
+                }
+            } catch(error) {
+                console.log(error);
+            }
+        isLiked ? setIsLiked(false) : setIsLiked(true);
+    };
+
+    const dislikeBlog = async (blogId, commentId, like_type) => {
+        if(!userId){
+            navigate('/login');
+        }
+        if(isLiked){
+            setIsLiked(false);
+        }
+        try {
+            const response = await fetch(`${process.env.REACT_APP_HOST_URL}/likes`,{
+                method:"POST",
+                headers: {
+                    'Content-Type': 'application/json' // 👈 Crucial header
+                },
+                body:JSON.stringify({
+                    user_id: userId,
+                    post_id: blogId ?? null,
+                    comment_id: commentId ?? null,
+                    like_status: !isDisLiked ? -1 : 0,
+                    like_type: like_type
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                setIsRefresh(true);
+            }
+            } catch(error) {
+                console.log(error);
+            }
+        isDisLiked ? setIsDisLiked(false) : setIsDisLiked(true);
+    };
+
+    const handleCommentSubmit = async (blogId) => {
+        if(!userId){
+            navigate('/login');
+        }
+        try {
+            const response = await fetch(`${process.env.REACT_APP_HOST_URL}/comments`,{
+                method:"POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify({
+                    user_id: userId,
+                    post_id: blogId,
+                    comment: comment,
+                })
+            });
+            if(response.success){
+                setIsRefresh(true);                
+            }
+        } catch(error) {
+            console.log(error);
+        }
+    };
+
+    const handleReplySubmit = async (blogId, commentId) => {
+        if(!userId){
+            navigate('/login');
+        }
+        try {
+            const response = await fetch(`${process.env.REACT_APP_HOST_URL}/comment-reply`,{
+                method:"POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify({
+                    user_id: userId,
+                    post_id: blogId,
+                    comment: reply,
+                    parent_id: commentId
+                })
+            });
+            const data = await response.json();
+            if(data.success){
+                navigate(0);
+            }
+        } catch(error) {
+            console.log(error);
+        }
+    };
+
+    const handleUpdateComment = async (blogId, commentId, comment) => {
+        if(!userId){
+            navigate('/login');
+        }
+        try {
+            const response = await fetch(`${process.env.REACT_APP_HOST_URL}/comment-update`,{
+                method:"PUT",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify({
+                    user_id: userId,
+                    post_id: blogId,
+                    comment: comment,
+                    comment_id: commentId
+                })
+            });
+            const data = await response.json();
+            if(data.success){
+                navigate(0);
+            }
+        } catch(error) {
+            console.log(error);
+        }
+    };
+    
+    // Follow User
+    const handleFollowUser = async (blogId,authorId, isFollowed) => {
+        if(!userId){
+            navigate('/login');
+        }
+        try {
+            const response = await fetch(`${process.env.REACT_APP_HOST_URL}/follow`,{
+                method:"POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify({
+                    blog_id: blogId,
+                    follower_id: userId,
+                    following_id: authorId,
+                    follow_status: isFollowed
+                })
+            });
+            const data = await response.json();
+            if(data.success){
+                setIsRefresh(true);
+            }
+        } catch(error) {
+            console.log(error);
+        }
+    };
+
     return(
         <main className="w-full h-screen bg-gray-100">
             <Header />
@@ -131,6 +269,12 @@ export default function SingleBlogPage(){
                                     )) : (
                                         ''
                                     )}
+                                    <div className="w-full h-full flex items-center justify-end gap-2">
+                                        <span>{blog.like_count == null ? 0 : blog.like_count}</span>
+                                        <ThumbsUp onClick={() => onlikeBlog(blog.id, null, 'post', blog.user_reaction == 1 ? 0 : 1  )} className={`w-[20px] cursor-pointer ${blog.user_reaction === 1 ? "text-green-400" : "text-orange-400"} hover:text-gray-700 h-[20px]`} />
+                                        <span>{blog.dislike_count == null ? 0 : blog.dislike_count}</span>
+                                        <ThumbsDown onClick={() => dislikeBlog(blog.id, null, 'post')} className={`w-[20px] cursor-pointer text-orange-400 ${blog.user_reaction === -1 ? "text-red-400" : "text-orange-400"} hover:text-gray-700 h-[20px]`} />
+                                    </div>
                                 </div>
                             </div>
                             {/* Blog Title */}
@@ -143,9 +287,10 @@ export default function SingleBlogPage(){
                                     <li className="text-gray-500 list-none">{ blog.created_at ? "Published : " + dayjs(blog.created_at).tz('Asia/Kolkata').format('ddd, MMMM YYYY') : ''}</li>
                                     <li className="text-gray-500 list-none">Last modified: {blog.updated_at ? dayjs(blog.updated_at).tz('Asia/Kolkata').format('ddd, MMMM YYYY') : ''}</li>
                                     { 
-                                     blog.author ? <li className="text-gray-500 flex items-center gap-1 list-none md:list-disk">By: <img className="w-[16px] h-[16px] rounded-full  hover:scale-110 transition-all duration-300 ease-in-out " src={blog.author.profile_image} alt={blog.author.username} /><Link to={`/author/${blog.author.id}`}>{blog.author.user_name}</Link></li> : <li>By:</li>
+                                     blog.author ? <li className="text-gray-500 flex items-center gap-1 list-none md:list-disk">By: <img className="w-[16px] h-[16px] rounded-full  hover:scale-110 transition-all duration-300 ease-in-out " src={blog.author.profile_image} alt={blog.author.username} /><Link to={`/author/${blog.author.id}`}>{blog.author.user_name}</Link>{blog.author.id === userId ? '' : <span onClick={() => 
+                                    handleFollowUser(blog.id, blog.author.id, blog?.is_follow ? 0 : 1)} className="text-orange-400 cursor-pointer">{blog?.is_follow ? `(${blog.follower_count ?? 0} Unfollow)` :  `(${blog.follower_count ?? 0} + Follow)`}</span>}</li> : <li>By:</li>
                                     }
-                                </div>
+                                </div> 
                             </div>
                             {/* Content in proper html */}
                             <div className="w-full h-full mt-5">
@@ -199,6 +344,17 @@ export default function SingleBlogPage(){
                                     </div>
                                 </div>
                                 <hr className="mt-10 mb-10 border-gray-200 md:block hidden" />
+                                   <CommentSection 
+                                    blog={blog}
+                                    comment={comment}
+                                    setComment={setComment}
+                                    reply={reply}
+                                    setReply={setReply}
+                                    onCommentSubmit={handleCommentSubmit}
+                                    onReplySubmit={handleReplySubmit}
+                                    likeBlog={onlikeBlog}
+                                    handleUpdateComment={handleUpdateComment}
+                                />
                             </div>
                         </div>
                     </div> 

@@ -1,14 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Header } from "./layout/Header";
 import { useNavigate } from "react-router-dom";
-import { useCookies } from "react-cookie";
 import '../css/Homepage.css';
 
 export default function RegisterForm(){
     const navigate = useNavigate();
-    const [cookies, setCookie, removeCookie] = useCookies();
-    const [token, setToken] = useState(null);
 
     useEffect(() => {
         //get token value
@@ -16,18 +13,10 @@ export default function RegisterForm(){
         .split('; ')
         .find(row => row.startsWith(`token=`))
         ?.split('=')[1];
-        if (token != null) {
-            setToken(token);
-        }else{
-            navigate('/login');
+        if (token == null) {
+        navigate('/homepage');
         }
     }, [navigate]);
-
-    // logout function
-    const logoutUser = () => {
-        removeCookie('token',{ path: '/' });
-        navigate('/login');
-    };
 
     return (
 

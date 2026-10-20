@@ -1,17 +1,28 @@
-import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from "react-router-dom";
 import { MenuIcon } from 'lucide-react';
 import { SidebarMenu } from "./SidebarMenu";
 import Logo from "../../assets/logo.png";
+import Notification from "../../components/Notifications";
 
 export const Header = () => {
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [token, setToken] = useState(null);
 
     const handleMenuClick = (value) => {
         setIsSidebarOpen(value);
     };
+    const handleToken = () => {
+        const token = document.cookie
+            .split('; ')
+            .find(row => row.startsWith(`token=`))
+            ?.split('=')[1];
+        setToken(token);
+    }
+    useEffect(() => {
+        handleToken();
+    }, []);
     return (
         <>
             <div className="w-full flex h-auto border-b border-gray-200  bg-white">
@@ -33,8 +44,23 @@ export const Header = () => {
                                     <Link to="/services" className="cursor-pointer hover:text-orange-400">Services</Link>
                                     <Link to="/contact" className="cursor-pointer hover:text-orange-400">Contact</Link>
                                 </ul>
-                                <div className="flex w-[20%] hidden lg:flex items-end justify-end gap-5">
-                                    <button className="cursor-pointer bg-orange-400 hover:bg-orange-500 text-white px-5 py-2 rounded-full" onClick={() => navigate('/login')}>Login/Register</button>
+                                <div className="flex items-center justify-center w-[20%] hidden lg:flex items-end justify-end gap-5">
+                                <Notification />
+                                    {token ? (
+                                        <button
+                                            className="cursor-pointer bg-orange-400 hover:bg-orange-500 text-white px-5 py-2 rounded-full"
+                                            onClick={() => navigate('/my-account')}
+                                        >
+                                            My Account
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="cursor-pointer bg-orange-400 hover:bg-orange-500 text-white px-5 py-2 rounded-full"
+                                            onClick={() => navigate('/login')}
+                                        >
+                                            Login/Register
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

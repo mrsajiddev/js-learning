@@ -11,7 +11,7 @@ import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone';
 import PaginationItem from '@mui/material/PaginationItem';
 import Stack from '@mui/material/Stack';
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ThumbsUp, ThumbsDown } from "lucide-react";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -23,7 +23,7 @@ export default function Blogs(){
     const [filterData, setFilterData] = useState({
         filters: '',
         searchfilter: ''
-    })
+    });
     const [categories, setCategories] = useState([]);
     useEffect(() => {
         const getAllPosts = async () =>{
@@ -38,6 +38,8 @@ export default function Blogs(){
                 })
                 const data = await response.json();
                 if(response.ok){
+                    // sort on the bases of best likes
+                    data.data.posts.sort((a, b) => b.likes - a.likes);
                     setBlogData(data.data.posts);
                     setCategories(data.data.categories);
                 }
@@ -135,19 +137,30 @@ return(
                             <div className="w-full h-auto mb-4 overflow-hidden rounded-3xl">
                                 <Link to={`/blog/${blog.slug}`}><img className="w-full hover:scale-110 transition-all duration-300 ease-in-out " src={blog.post_image_url} alt={blog.title} /></Link>
                             </div>
-                            <div className="flex gap-1">
-                                {blog.categories ? 
+                            <div className="flex justify-between gap-1">
+                                {
+                                blog.categories ? 
                                     blog.categories.map((category) => (
                                         <Link to={`/category/${category.cat_slug}`}><span key={category.id} className="w-fit h-fit text-sm text-white rounded-[100px] p-2 bg-orange-400 ">{category.cat_name}</span></Link>
                                     ))
                                 : 
                                 null
                                 }
+                            <div className="w-full h-full flex items-end justify-end gap-2">
+                                <div className="flex items-center gap-2">
+                                    <ThumbsUp className="w-4 h-4 text-green-500" />
+                                    <span className="text-gray-500">{blog.likes}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ThumbsDown className="w-4 h-4 text-red-500" />
+                                    <span className="text-gray-500">{blog.dislikes}</span>
+                                </div>
+                            </div>
                             </div>
                             <Link to={`/post/${blog.slug}`}><h2 className="mt-2 font-semibold text-2xl cursor-pointer hover:underline">{blog.title}</h2></Link>
                             <div className="mt-2 flex flex-row gap-4">
                                 <span className="text-sm flex items-center gap-1 px-1">By: <img className="w-[16px] h-[16px] rounded-full  hover:scale-110 transition-all duration-300 ease-in-out " src={blog.author.profile_image} alt={blog.author.title} /><Link to={`/author/${blog.author.id}`}>{blog.author.user_name}</Link></span>
-                                <span className="text-sm">{dayjs(blog.created_at).tz('Asia/Kolkata').format('ddd, MMMM YYYY')}</span>
+                                <span className="text-sm">{dayjs(blog.created_at).tz('Asia/Karachi').format('ddd, MMMM YYYY')}</span>
                             </div>
                         </div>
                     ))}

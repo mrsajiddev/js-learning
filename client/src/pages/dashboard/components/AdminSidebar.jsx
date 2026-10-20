@@ -9,6 +9,7 @@ import {
   ChartNoAxesGantt,
   PanelRightOpen,
   Handshake,
+  Reply,
   Tags,
   ListCheck,
   Settings,
@@ -61,7 +62,7 @@ export default function AdminSidebar() {
         },
       ],
     },
-    // { name: "Memberships", icon: <Handshake size={20} />, path: "/admin/memberships" },
+    { name: "Comments", icon: <Reply size={20} />, path: "/admin/comments" },
     { name: "Settings", icon: <Settings size={20} /> },
   ];
   useEffect(() => {

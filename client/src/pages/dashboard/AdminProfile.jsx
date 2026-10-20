@@ -103,7 +103,7 @@ export default function AdminProfile() {
                         <div className="flex flex-col items-center  gap-20 ">
                         <div className="relative">
                             <img
-                            src={userData.profile_image ? "http://localhost:5000/" +  userData.profile_image : `${process.env.PUBLIC_URL}` + DummyImg}
+                            src={userData.profile_image ?  userData.profile_image : `${process.env.PUBLIC_URL}` + DummyImg}
                             alt="Admin"
                             width={150}
                             height={150}
@@ -131,6 +131,11 @@ export default function AdminProfile() {
                             <p className="text-gray-500 mt-2">
                                 {userData.user_role ? userData.user_role : "---"}
                             </p>
+                            {userData.user_bio && (
+                                <p className="text-gray-500 mt-2">
+                                    Bio : {userData.user_bio}
+                                </p>
+                            )}
                         </div>
                     </div>
                     <hr className="w-full text-gray-700" />

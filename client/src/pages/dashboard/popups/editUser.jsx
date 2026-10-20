@@ -11,6 +11,7 @@ export default function DeleteUser({ userId, onValueReturn, onSetNotice }) {
         user_email: "",
         user_phone: "",
         user_role: "",
+        user_bio: "",
         is_verified: false
     });
     const [emailError, setEmailError] = useState(false);
@@ -233,6 +234,10 @@ export default function DeleteUser({ userId, onValueReturn, onSetNotice }) {
                             <option value="admin">Admin</option>
                             <option value="user">User</option>
                         </select>
+                    </div>
+                    <div id="userBioError" className="flex flex-col">
+                        <label className="text-sm text-gray-600 mb-1">Bio</label>
+                        <textarea name="user_bio" value={userData.user_bio || ""} onChange={handleChange} className="border border-gray-300 rounded-md px-2 py-2 outline-none focus:border-blue-500" />
                     </div>
                 </div>
                 <div className="flex justify-end gap-2 mt-4">

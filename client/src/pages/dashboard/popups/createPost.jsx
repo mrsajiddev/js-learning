@@ -7,7 +7,7 @@ import { TextStyleKit } from "@tiptap/extension-text-style";
 import MultipleSelectCheckmarks from "../../components/multiSelect"
 
 
-export default function CreatePost  ({onValueReturn, onSetNotice, userID}){
+export default function CreatePost({onValueReturn, onSetNotice, userId}){
 
     const [loader, setLoader] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
@@ -21,7 +21,7 @@ export default function CreatePost  ({onValueReturn, onSetNotice, userID}){
         cat_id: "",
         tag_id: [],
         attachment_id: "",
-        author_id: userID,
+        author_id: userId,
         image: "",
     });
     
@@ -134,7 +134,7 @@ export default function CreatePost  ({onValueReturn, onSetNotice, userID}){
 
     return(
         <div className="w-full p-6 space-y-6">
-            <h1 className="text-2xl font-bold">Create Category</h1>
+            <h1 className="text-2xl font-bold">Create Posts</h1>
                 <div className="w-full grid grid-cols-1 gap-6">
                     {/* name input */}
                     <div className="w-full">
